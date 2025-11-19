@@ -56,7 +56,7 @@ export default function Home() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="form-attendance">Attendance (%)</FieldLabel>
+                      <FieldLabel htmlFor="form-attendance">Attendance</FieldLabel>
                       <div className="flex flex-row gap-2">
                         <Slider
                           value={[field.value]}
@@ -203,6 +203,9 @@ export default function Home() {
                             onChange={(e) => form.setValue(field.name, Number(e.target.value))}
                             aria-invalid={fieldState.invalid}
                           />
+                          <InputGroupAddon align="inline-end">
+                            <span>hours</span>
+                          </InputGroupAddon>
                         </InputGroup>
                       </div>
                       <FieldDescription>The number of hours you spend studying every week.</FieldDescription>

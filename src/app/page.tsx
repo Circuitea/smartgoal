@@ -218,7 +218,7 @@ export default function Home() {
           </CardContent>
           <CardFooter className="flex-col gap-2">
             <Button className="w-full">Submit</Button>
-            <Button variant="outline" className="w-full">Reset</Button>
+            <Button onClick={() => form.reset()} variant="outline" className="w-full">Reset</Button>
           </CardFooter>
         </Card>
       </main>

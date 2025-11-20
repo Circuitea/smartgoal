@@ -3,12 +3,16 @@
 import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldDescription, FieldError, FieldLabel, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { predictGrade, Prediction } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { SelectValue } from "@radix-ui/react-select";
+import { Info } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod"
 
@@ -17,13 +21,12 @@ const formSchema = z.object({
   participationScore: z.number().min(0).max(100),
   sleepHoursPerNight: z.number().min(0).max(24),
   stressLevel: z.number().min(1).max(10),
-  studyHours: z.number().min(1).max(168),
+  studyHours: z.number().min(0).max(168),
+  desiredGrade: z.number().min(0).max(4),
 });
 
 export default function Home() {
-  useEffect(() => {
-    console.log(form.getValues())
-  })
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,23 +36,29 @@ export default function Home() {
       sleepHoursPerNight: 12,
       stressLevel: 5,
       studyHours: 168 / 2,
+      desiredGrade: 0,
     },
     mode: "onBlur",
   })
 
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    setPrediction(null);
+    predictGrade(data).then(setPrediction);
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <div className="absolute top-0 right-0 p-4">
+      <div className="fixed top-0 right-0 p-4">
         <ThemeModeToggle />
       </div>
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-8 px-16 bg-white dark:bg-black sm:items-start">
+      <main className="flex min-h-screen w-full grid md:grid-cols-2 gap-2 py-8 px-16 bg-white dark:bg-black sm:items-start">
         <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Your Study Habits</CardTitle>
-            <CardDescription>Provide your study habits and related metrics.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form id="study-habits">
+          <form id="study-habits" onSubmit={form.handleSubmit(onSubmit)}>
+            <CardHeader>
+              <CardTitle>Your Study Habits</CardTitle>
+              <CardDescription>Provide your study habits and related metrics.</CardDescription>
+            </CardHeader>
+            <CardContent className="my-8">
               <FieldSet>
                 <Controller
                   name="attendance"
@@ -61,7 +70,7 @@ export default function Home() {
                         <Slider
                           value={[field.value]}
                           onValueChange={([value]) => field.onChange(value)}
-                          className="flex-[4]"
+                          className="flex-[3]"
                           aria-invalid={fieldState.invalid}
                           min={0}
                           max={100}
@@ -94,7 +103,7 @@ export default function Home() {
                         <Slider
                           value={[field.value]}
                           onValueChange={([value]) => field.onChange(value)}
-                          className="flex-[4]"
+                          className="flex-[3]"
                           aria-invalid={fieldState.invalid}
                           min={0}
                           max={100}
@@ -127,7 +136,7 @@ export default function Home() {
                         <Slider
                           value={[field.value]}
                           onValueChange={([value]) => field.onChange(value)}
-                          className="flex-[4]"
+                          className="flex-[3]"
                           aria-invalid={fieldState.invalid}
                           min={0}
                           max={24}
@@ -160,7 +169,7 @@ export default function Home() {
                         <Slider
                           value={[field.value]}
                           onValueChange={([value]) => field.onChange(value)}
-                          className="flex-[4]"
+                          className="flex-[3]"
                           aria-invalid={fieldState.invalid}
                           min={1}
                           max={10}
@@ -190,7 +199,7 @@ export default function Home() {
                         <Slider
                           value={[field.value]}
                           onValueChange={([value]) => field.onChange(value)}
-                          className="flex-[4]"
+                          className="flex-[3]"
                           aria-invalid={fieldState.invalid}
                           min={0}
                           max={168}
@@ -213,13 +222,76 @@ export default function Home() {
                     </Field>
                   )}
                 />
+                <Controller
+                  name="desiredGrade"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="form-attendance">Current Grade</FieldLabel>
+                      <Select
+                        value={String(field.value)}
+                        onValueChange={(value) => form.setValue(field.name, Number(value))}
+                      >
+                        <SelectTrigger aria-disabled={fieldState.invalid}>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Grade A</SelectItem>
+                          <SelectItem value="1">Grade B</SelectItem>
+                          <SelectItem value="2">Grade C</SelectItem>
+                          <SelectItem value="3">Grade D</SelectItem>
+                          <SelectItem value="4">Grade F</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FieldDescription>Your desired Grade (A, B, C, D, F)</FieldDescription>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
               </FieldSet>
-            </form>
+            </CardContent>
+            <CardFooter className="flex-col gap-2">
+              <Button type="submit" className="w-full">Submit</Button>
+              <Button type="button" onClick={() => form.reset()} variant="outline" className="w-full">Reset</Button>
+            </CardFooter>
+          </form>
+        </Card>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Your Predicted Grade</CardTitle>
+            <CardDescription>The model has predicted your Grade from your Study Habits</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!prediction
+              ? (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Info />
+                    </EmptyMedia>
+                    <EmptyTitle>No predictions</EmptyTitle>
+                    <EmptyDescription>No predictions generated</EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <span>Enter your study habits and press Submit to generate a prediction.</span>
+                  </EmptyContent>
+                </Empty>
+              )
+              : (
+                <div className="flex flex-col justify-center items-center">
+                  <span className="text-sm text-gray-500">Predicted Grade</span>
+                  <span className="text-2xl font-bold">{prediction.predicted_label}</span>
+
+                  <span className="p-4">
+                    {prediction.recommendation === 'same'
+                      ? 'Well done! You\'ve met (or exceeded) your desired grade.'
+                      : 'It seems that your study habits are not allowing you to reach the grades you desire. You could do well with adjusting your study habits.'
+                    }
+                  </span>
+                </div>
+              )
+            }
           </CardContent>
-          <CardFooter className="flex-col gap-2">
-            <Button className="w-full">Submit</Button>
-            <Button onClick={() => form.reset()} variant="outline" className="w-full">Reset</Button>
-          </CardFooter>
         </Card>
       </main>
     </div>

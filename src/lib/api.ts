@@ -4,7 +4,14 @@ export interface Prediction {
   model_status: string
   predicted_class_id: number
   predicted_label: string
-  recommendation: 'same' | 'more'
+  grade_recommendation: 'same' | 'more'
+  recommendations: {
+    attendance?: number
+    participation_score?: number
+    study_hours_per_week?: number
+    stress_level?: number
+    sleep_hours_per_night?: number
+  }
 }
 
 interface Features {
@@ -30,7 +37,8 @@ export async function predictGrade(features: Features): Promise<Prediction> {
         "participation_score": features.participationScore,
         "study_hours_per_week": features.studyHours,
         "stress_level": features.stressLevel,
-        "sleep_hours_per_night": features.sleepHoursPerNight
+        "sleep_hours_per_night": features.sleepHoursPerNight,
+        "target_grade": features.desiredGrade,
       }), 
     });
 
@@ -42,7 +50,7 @@ export async function predictGrade(features: Features): Promise<Prediction> {
     const data = await response.json() as Prediction;
     return {
         ...data,
-        recommendation: data.predicted_class_id > features.desiredGrade
+        grade_recommendation: data.predicted_class_id > features.desiredGrade
             ? 'more'
             : 'same',
     };

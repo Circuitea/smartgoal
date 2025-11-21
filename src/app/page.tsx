@@ -6,12 +6,13 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldDescription, FieldError, FieldLabel, FieldSet } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Item, ItemContent, ItemMedia } from "@/components/ui/item";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { predictGrade, Prediction } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectValue } from "@radix-ui/react-select";
-import { Info } from "lucide-react";
+import { Info, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod"
@@ -283,11 +284,62 @@ export default function Home() {
                   <span className="text-2xl font-bold">{prediction.predicted_label}</span>
 
                   <span className="p-4">
-                    {prediction.recommendation === 'same'
+                    {prediction.grade_recommendation === 'same'
                       ? 'Well done! You\'ve met (or exceeded) your desired grade.'
                       : 'It seems that your study habits are not allowing you to reach the grades you desire. You could do well with adjusting your study habits.'
                     }
                   </span>
+
+                  {prediction.recommendations.attendance && (
+                    <Item className="w-full" variant="outline" size="sm">
+                      <ItemMedia variant="icon">
+                        <Sparkles />
+                      </ItemMedia>
+                      <ItemContent>
+                        <span>Attendance: Increase to at least {prediction.recommendations.attendance}%</span>
+                      </ItemContent>
+                    </Item>
+                  )}
+                  {prediction.recommendations.participation_score && (
+                    <Item className="w-full" variant="outline" size="sm">
+                      <ItemMedia variant="icon">
+                        <Sparkles />
+                      </ItemMedia>
+                      <ItemContent>
+                        <span>Participation Score: Aim for at least {prediction.recommendations.participation_score}%</span>
+                      </ItemContent>
+                    </Item>
+                  )}
+                  {prediction.recommendations.sleep_hours_per_night && (
+                    <Item className="w-full" variant="outline" size="sm">
+                      <ItemMedia variant="icon">
+                        <Sparkles />
+                      </ItemMedia>
+                      <ItemContent>
+                        <span>Sleep Hours: Increase sleep to {prediction.recommendations.sleep_hours_per_night}</span>
+                      </ItemContent>
+                    </Item>
+                  )}
+                  {prediction.recommendations.stress_level && (
+                    <Item className="w-full" variant="outline" size="sm">
+                      <ItemMedia variant="icon">
+                        <Sparkles />
+                      </ItemMedia>
+                      <ItemContent>
+                        <span>Stress Level: Reduce stress level to {prediction.recommendations.stress_level}</span>
+                      </ItemContent>
+                    </Item>
+                  )}
+                  {prediction.recommendations.study_hours_per_week && (
+                    <Item className="w-full" variant="outline" size="sm">
+                      <ItemMedia variant="icon">
+                        <Sparkles />
+                      </ItemMedia>
+                      <ItemContent>
+                        <span>Study Hours: Increase to {prediction.recommendations.study_hours_per_week} per week</span>
+                      </ItemContent>
+                    </Item>
+                  )}
                 </div>
               )
             }
